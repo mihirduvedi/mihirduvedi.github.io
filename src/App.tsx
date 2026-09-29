@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowDownRight, ArrowRight, ExternalLink, Menu, X } from 'lucide-react'
+import { ArrowDown, ArrowDownRight, ArrowRight, ExternalLink, Menu, X, Pause, Play } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import Dayglass from './Dayglass'
 import {
@@ -9,7 +9,9 @@ import {
   getSuggestions,
   type AutocompleteIndex,
 } from './autocomplete'
-import { atlasProjects, workingQuestions, type ThemeKey } from './data'
+import { atlasProjects, workingQuestions } from './data'
+import WorkingForms, { ThemeGlyph } from './WorkingForms'
+import { MotionProvider, useMotion } from './motion'
 import { mountLiquidGlass } from './liquidGlass'
 
 export { getSuggestions } from './autocomplete'
@@ -39,17 +41,22 @@ function useActiveSection(ids: string[]) {
   return active
 }
 
-function useLiveTime() {
+function useLiveTime(paused: boolean) {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 250)
+    if (paused) return
+    setNow(new Date())
+    const timer = window.setInterval(() => { if (!document.hidden) setNow(new Date()) }, 1000)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [paused])
   return now
 }
 
 function Header() {
   const [open, setOpen] = useState(false)
+  const { paused, reduced, toggle } = useMotion()
+  const motionLabel = reduced ? 'Reduced motion is enabled in your system settings' : paused ? 'Enable motion' : 'Pause motion'
+  const menuRef = useRef<HTMLButtonElement>(null)
   const headerRef = useRef<HTMLElement>(null)
   const sections = useMemo(() => ['top', 'work', 'questions', 'about'], [])
   const active = useActiveSection(sections)
@@ -61,15 +68,17 @@ function Header() {
 
   useEffect(() => {
     if (!open) return
-    const closeOnEscape = (event: globalThis.KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => { if (event.key === 'Escape') { setOpen(false); menuRef.current?.focus() } }
+    const closeOnWideScreen = () => { if (window.innerWidth > 760) setOpen(false) }
     window.addEventListener('keydown', closeOnEscape)
-    return () => window.removeEventListener('keydown', closeOnEscape)
+    window.addEventListener('resize', closeOnWideScreen)
+    return () => { window.removeEventListener('keydown', closeOnEscape); window.removeEventListener('resize', closeOnWideScreen) }
   }, [open])
 
   useEffect(() => {
     const header = headerRef.current
     if (!header) return
-    return mountLiquidGlass(header, { scale: -48, border: 0.19, mapBlur: 9, fallbackBlur: 13 })
+    return mountLiquidGlass(header, { scale: -18, border: 0.19, mapBlur: 9, fallbackBlur: 13 })
   }, [])
 
   useEffect(() => {
@@ -116,75 +125,42 @@ function Header() {
       <a className="wordmark" href="#top" onClick={close} aria-label="Mihir Duvedi, back to top">
         <span aria-hidden="true">MD</span><strong>Mihir Duvedi</strong>
       </a>
-      <button className="menu-button" type="button" aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open} aria-controls="primary-navigation" onClick={() => setOpen((value) => !value)}>
-        {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}<span>{open ? 'Close' : 'Menu'}</span>
-      </button>
-      <nav id="primary-navigation" className={`primary-nav ${open ? 'primary-nav--open' : ''}`} aria-label="Primary">
-        {([['work', 'Work'], ['questions', 'Questions'], ['about', 'About']] as const).map(([id, label]) => (
-          <a key={id} href={`#${id}`} aria-current={active === id ? 'location' : undefined} onClick={close}>{label}</a>
-        ))}
-      </nav>
-    </header>
-  )
-}
-
-function ProjectIndex() {
-  const [selected, setSelected] = useState<ThemeKey>('trust')
-  const nodeRefs = useRef<Array<HTMLAnchorElement | null>>([])
-  const handleNodeKeyDown = (event: KeyboardEvent<HTMLAnchorElement>, index: number) => {
-    if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
-    event.preventDefault()
-    let next = index
-    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (index + 1) % atlasProjects.length
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index - 1 + atlasProjects.length) % atlasProjects.length
-    if (event.key === 'Home') next = 0
-    if (event.key === 'End') next = atlasProjects.length - 1
-    nodeRefs.current[next]?.focus()
-  }
-  return (
-    <div className="project-index">
-      <div className="project-index__question">
-        <span>Four systems, one question</span>
-        <h2>How should software explain itself when the result matters?</h2>
+      <div className="header-actions">
+        <button className="motion-button" type="button" onClick={toggle} disabled={reduced} aria-label={motionLabel} title={motionLabel}>{paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}<span>{reduced ? 'Reduced motion' : `Motion ${paused ? 'off' : 'on'}`}</span></button>
+        <button ref={menuRef} className="menu-button" type="button" aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open} aria-controls="primary-navigation" onClick={() => setOpen((value) => !value)}>
+          {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}<span>{open ? 'Close' : 'Menu'}</span>
+        </button>
+        <nav id="primary-navigation" className={`primary-nav ${open ? 'primary-nav--open' : ''}`} aria-label="Primary">
+          {([['work', 'Work'], ['questions', 'Questions'], ['about', 'About']] as const).map(([id, label]) => (
+            <a key={id} href={`#${id}`} aria-current={active === id ? 'location' : undefined} onClick={close}>{label}</a>
+          ))}
+        </nav>
       </div>
-      <ol aria-label="Project index">
-        {atlasProjects.map((project, index) => (
-          <li key={project.key}>
-            <a
-              ref={(node) => { nodeRefs.current[index] = node }}
-              className={selected === project.key ? 'is-selected' : ''}
-              href={project.href}
-              onFocus={() => setSelected(project.key)}
-              onPointerEnter={() => setSelected(project.key)}
-              onKeyDown={(event) => handleNodeKeyDown(event, index)}
-            >
-              <span>{project.index}</span><strong>{project.theme}</strong><small>{project.title}</small><ArrowDownRight aria-hidden="true" />
-            </a>
-          </li>
-        ))}
-      </ol>
-    </div>
+    </header>
   )
 }
 
 function Hero() {
   return (
     <section id="top" className="hero dark-space">
-      <div className="hero__glow" aria-hidden="true" />
       <div className="page-shell hero__grid">
-        <h1 aria-label="Mihir Duvedi"><span>Mihir</span><span className="hero__surname">Duvedi</span></h1>
-        <div className="hero__statement">
-          <p>I build software for the gap between what a system does and what a person understands.</p>
-          <a className="primary-link" href="#work">See the work <ArrowDown aria-hidden="true" /></a>
+        <div className="hero__identity">
+          <p className="hero__eyebrow"><span className="identity-mark" aria-hidden="true" />A museum of working ideas</p>
+          <h1 aria-label="Mihir Duvedi"><span>Mihir</span><span className="hero__surname">Duvedi</span></h1>
+          <div className="hero__statement">
+            <p>I build software for the gap between what a system does and what a person understands.</p>
+            <a className="primary-link" href="#work">See the work <ArrowDown aria-hidden="true" /></a>
+          </div>
         </div>
-        <ProjectIndex />
+        <WorkingForms />
+        <div className="hero__foot"><span>Software, systems & interaction</span><a href="#work">Four working ideas <ArrowDown aria-hidden="true" /></a></div>
       </div>
     </section>
   )
 }
 
 function Orientation() {
-  return <section className="orientation paper-space"><div className="page-shell"><p>I study computer science and Spanish because I care about how systems carry meaning between machines, between people, and between the two.</p></div></section>
+  return <section className="orientation paper-space"><div className="page-shell orientation__grid"><div className="orientation__aside"><span className="plate-label">The common thread</span><svg viewBox="0 0 200 180" fill="none" aria-hidden="true">{Array.from({ length: 19 }, (_, i) => <path key={i} d={`M 8 ${25 + i * 7} C ${60 + i * 2} ${25 + i * 7}, ${140 - i * 2} ${155 - i * 7}, 192 ${155 - i * 7}`} stroke="currentColor" strokeWidth=".8" />)}</svg><span>Systems ↔ people</span></div><p>I study computer science and Spanish because I care about how systems carry meaning between machines, between people, and between the two.</p></div></section>
 }
 
 const receiptStates = [
@@ -200,12 +176,12 @@ function ReceiptExhibit() {
     <article id="agent-receipt" className="exhibit exhibit--receipt dark-space">
       <div className="page-shell exhibit-grid">
         <header className="exhibit-header">
-          <p className="plate-label">01 / Trust</p><h3>Agent Receipt</h3>
+          <p className="plate-label"><ThemeGlyph theme="trust" />01 / Trust</p><h3>Agent Receipt</h3>
           <p className="exhibit-premise">When an AI agent acts, its operator needs more than a log.</p>
           <p className="exhibit-description">Agent Receipt compares the action trace with the authority a person granted, then makes the difference reviewable.</p>
           <a className="text-link" href={receiptUrl} target="_blank" rel="noreferrer">View source <ExternalLink aria-hidden="true" /></a>
         </header>
-        <div className="media-glass receipt-stage"><img src={asset(state.image)} alt={state.alt} loading="lazy" decoding="async" /><p aria-live="polite">{state.note}</p></div>
+        <div className="media-glass receipt-stage"><div className="exhibit-windowbar"><span>Agent Receipt</span><span>Evidence viewer</span></div><img src={asset(state.image)} width="1280" height="720" alt={state.alt} loading="lazy" decoding="async" /><p aria-live="polite">{state.note}</p></div>
         <div className="state-selector" role="group" aria-label="Agent Receipt views">
           {receiptStates.map((item, index) => (
             <button key={item.key} type="button" aria-pressed={stateKey === item.key} onClick={() => setStateKey(item.key)}>
@@ -247,7 +223,7 @@ function AutocompleteExhibit() {
     if (!suggestions.length) return
     if (event.key === 'ArrowDown') { event.preventDefault(); setSelected((current) => (current + 1) % suggestions.length) }
     if (event.key === 'ArrowUp') { event.preventDefault(); setSelected((current) => (current - 1 + suggestions.length) % suggestions.length) }
-    if ((event.key === 'Enter' || event.key === 'Tab') && suggestions[selected]) { event.preventDefault(); accept(suggestions[selected]) }
+    if ((event.key === 'Enter' || (event.key === 'Tab' && !event.shiftKey && fragment)) && suggestions[selected]) { event.preventDefault(); accept(suggestions[selected]) }
     if (event.key === 'Escape') setSelected(0)
   }
   const status = corpusState === 'ready'
@@ -260,7 +236,7 @@ function AutocompleteExhibit() {
     <article id="autocomplete" className="exhibit exhibit--autocomplete paper-space">
       <div className="page-shell autocomplete-grid">
         <header className="exhibit-header">
-          <p className="plate-label">02 / Prediction</p><h3>Autocomplete</h3>
+          <p className="plate-label"><ThemeGlyph theme="prediction" />02 / Prediction</p><h3>Autocomplete</h3>
           <p className="exhibit-premise">A useful prediction should be quick to inspect and easy to reject.</p>
           <p className="exhibit-description">This browser study uses the project’s real Pride and Prejudice vocabulary and its Trie-plus-bigram candidate rule. The full engine adds a character LSTM to rerank the same candidates.</p>
           <a className="text-link text-link--dark" href={autocompleteUrl} target="_blank" rel="noreferrer">Open the full engine <ExternalLink aria-hidden="true" /></a>
@@ -268,14 +244,20 @@ function AutocompleteExhibit() {
         <div className="prediction-stage">
           <label htmlFor="prediction-input">Try a phrase</label>
           <input id="prediction-input" value={value} maxLength={120} autoComplete="off" spellCheck="false" aria-describedby="prediction-help prediction-status" onChange={(event) => setValue(event.target.value)} onKeyDown={handleKeyDown} />
-          <p id="prediction-help">Suggestions must begin with the unfinished word. Use arrows to choose; press Enter or Tab to accept.</p>
-          <div className="suggestion-list" role="group" aria-label="Suggestions">
+          <p id="prediction-help">Suggestions must begin with the unfinished word. Use arrows to choose; press Enter to accept, or Tab to finish a word.</p>
+          <div className={`suggestion-list ${suggestions.length ? 'suggestion-list--branching' : ''}`} role="group" aria-label="Suggestions">
+            {suggestions.length > 0 && <div className="prediction-branches" aria-hidden="true">
+              <span className="prediction-root"><small>{fragment ? 'Prefix' : 'Next word'}</small><strong>{fragment || '…'}</strong></span>
+              <svg viewBox={`0 0 200 ${suggestions.length * 80}`} preserveAspectRatio="none" fill="none">
+                {suggestions.map((word, i) => <path key={word} className={i === selected ? 'is-active' : ''} d={`M0 ${suggestions.length * 40} C110 ${suggestions.length * 40} 70 ${i * 80 + 40} 200 ${i * 80 + 40}`} />)}
+              </svg>
+            </div>}
             {suggestions.map((word, suggestionIndex) => (
               <button key={word} type="button" aria-pressed={selected === suggestionIndex} onPointerEnter={() => setSelected(suggestionIndex)} onClick={() => accept(word)}>
                 <span>{String(suggestionIndex + 1).padStart(2, '0')}</span><strong>{word}</strong><ArrowRight aria-hidden="true" />
               </button>
             ))}
-            {!suggestions.length && <p className="suggestion-empty">No corpus word starts with “{fragment}.” Keep typing or try another prefix.</p>}
+            {!suggestions.length && <p className="suggestion-empty">{fragment ? `No corpus word starts with “${fragment}.” Keep typing or try another prefix.` : 'Type a word or phrase to see its possible continuations.'}</p>}
           </div>
           <p id="prediction-status" className="prediction-status" aria-live="polite">{status}</p>
         </div>
@@ -285,17 +267,33 @@ function AutocompleteExhibit() {
 }
 
 function ClockExhibit() {
-  const now = useLiveTime()
+  const { paused } = useMotion()
+  const now = useLiveTime(paused)
+  const [previewHour, setPreviewHour] = useState<number | null>(null)
+  const frozenTime = useRef(now)
+  if (!paused) frozenTime.current = now
+  const displayedTime = new Date(previewHour === null ? (paused ? frozenTime.current : now) : now)
+  if (previewHour !== null) displayedTime.setHours(Math.floor(previewHour), Math.round((previewHour % 1) * 60), 0, 0)
+  const hours = displayedTime.getHours() + displayedTime.getMinutes() / 60
+  const timeLabel = displayedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
   return (
     <article id="clock-museum" className="exhibit exhibit--clocks dark-space">
       <div className="page-shell clock-grid">
         <header className="exhibit-header">
-          <p className="plate-label">03 / Time</p><h3>Clock Museum</h3>
+          <p className="plate-label"><ThemeGlyph theme="time" />03 / Time</p><h3>Clock Museum</h3>
           <p className="exhibit-premise">This hourglass turns the whole day into one slow pour.</p>
           <p className="exhibit-description">It follows your local time: the day so far settles below, while the hours left stay above.</p>
           <a className="text-link" href={githubUrl} target="_blank" rel="noreferrer">Browse my GitHub <ExternalLink aria-hidden="true" /></a>
         </header>
-        <div className="dayglass-stage"><Dayglass now={now} /></div>
+        <div className="clock-instrument">
+          <div className="dayglass-stage"><Dayglass now={displayedTime} /></div>
+          <div className="dayglass-controls">
+            <div className="dayglass-readout"><div><span>{previewHour === null ? (paused ? 'Time held' : 'Your local time') : 'Preview time'}</span><strong>{timeLabel}</strong></div><p>{Math.round(hours / 24 * 100)}% of the day<br /><span>{previewHour === null ? 'A day in one slow pour.' : 'Move through the day.'}</span></p></div>
+            <label htmlFor="dayglass-time">Explore a different hour</label>
+            <input id="dayglass-time" type="range" min="0" max="1439" step="1" value={Math.round((previewHour ?? hours) * 60)} aria-valuetext={timeLabel} onChange={event => setPreviewHour(Number(event.target.value) / 60)} />
+            <div className="dayglass-scale"><span>00:00</span><button type="button" disabled={previewHour === null} onClick={() => setPreviewHour(null)}>{previewHour === null ? (paused ? 'Motion paused' : 'Following your clock') : 'Return to local time'}</button><span>24:00</span></div>
+          </div>
+        </div>
       </div>
     </article>
   )
@@ -314,12 +312,13 @@ function AtriumExhibit() {
     <article id="atrium" className="exhibit exhibit--atrium dark-space">
       <div className="page-shell atrium-grid">
         <header className="exhibit-header">
-          <p className="plate-label">04 / Recovery</p><h3>Atrium</h3>
+          <p className="plate-label"><ThemeGlyph theme="recovery" />04 / Recovery</p><h3>Atrium</h3>
           <p className="exhibit-premise">A workout should survive the moment the network or the app does not.</p>
           <p className="exhibit-description">Atrium keeps an active session on the device, restores interrupted work, and reconciles it with the training record when the app returns.</p>
         </header>
         <div className="atrium-stage">
-          <div className="atrium-screen"><img src={asset(current.image)} alt={current.alt} loading="lazy" decoding="async" /></div>
+          <div className="recovery-orbits" aria-hidden="true"><i /><i /><i /></div>
+          <div className="atrium-screen"><img src={asset(current.image)} width="1206" height="2622" alt={current.alt} loading="lazy" decoding="async" /></div>
           <p aria-live="polite">{current.note}</p>
         </div>
         <div className="atrium-selector" role="group" aria-label="Atrium views">
@@ -334,15 +333,40 @@ function AtriumExhibit() {
   )
 }
 
+function ExhibitRail() {
+  const [active, setActive] = useState<string | null>(null)
+  useEffect(() => {
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const mark = window.innerHeight * .45
+      const current = atlasProjects.find(project => {
+        const rect = document.querySelector(project.href)?.getBoundingClientRect()
+        return rect && rect.top <= mark && rect.bottom > mark
+      })
+      setActive(current?.key ?? null)
+    }
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', schedule); window.removeEventListener('resize', schedule) }
+  }, [])
+  return <nav className="exhibit-rail" aria-label="Exhibition navigation" hidden={!active}>
+    {atlasProjects.map(project => <a key={project.key} href={project.href} aria-current={active === project.key ? 'location' : undefined} aria-label={`${project.index} ${project.title}`}><span>{project.index}</span><span className="exhibit-rail__title">{project.title}</span></a>)}
+  </nav>
+}
+
 function Work() {
   return (
     <section id="work" aria-labelledby="work-heading">
       <div className="work-threshold paper-space">
         <div className="page-shell work-threshold__grid">
           <div><p className="plate-label">Selected work / 2025–2026</p><h2 id="work-heading">Four systems under pressure.</h2></div>
-          <ol>{atlasProjects.map((project) => <li key={project.key}><a href={project.href}><span>{project.index}</span><strong>{project.title}</strong><ArrowDownRight aria-hidden="true" /></a></li>)}</ol>
+          <ol>{atlasProjects.map((project) => <li key={project.key}><a href={project.href}><span>{project.index}</span><strong>{project.title}</strong><ThemeGlyph theme={project.key} /><ArrowDownRight aria-hidden="true" /></a></li>)}</ol>
         </div>
       </div>
+      <ExhibitRail />
       <ReceiptExhibit /><AutocompleteExhibit /><ClockExhibit /><AtriumExhibit />
     </section>
   )
@@ -412,8 +436,8 @@ export default function App() {
       </defs>
     </svg>
     <a className="skip-link" href="#main">Skip to main content</a>
-    <Header />
+    <MotionProvider><Header />
     <main id="main"><Hero /><Orientation /><Work /><Questions /><About /></main>
-    <Footer />
+    <Footer /></MotionProvider>
   </>
 }
