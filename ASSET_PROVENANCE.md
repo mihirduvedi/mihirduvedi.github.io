@@ -1,12 +1,18 @@
 # Asset provenance
 
-The portfolio ships current project captures, the text corpus used by Mihir’s autocomplete project, and one synthetic digital-gouache clock sequence. The clock artwork is an illustration, not a photograph or documentary image.
+The portfolio ships project captures, the text corpus used by Mihir’s autocomplete project, and one synthetic digital-gouache clock sequence. The clock artwork is an illustration, not a photograph or documentary image.
 
 ## Agent Receipt
 
 - `public/assets/projects/agent-receipt-trace.jpg` — trace-intake capture from Mihir’s Agent Receipt project.
 - `public/assets/projects/agent-receipt-deviation.jpg` — deviation-review capture from that project.
 - `public/assets/projects/agent-receipt-gap.jpg` — evidence-gap capture from that project.
+
+## Counterstep
+
+- `public/assets/projects/counterstep-repaired.jpg` is an unchanged copy of the August 31, 2026 recorded recovery capture in [Counterstep’s evidence directory](https://github.com/mihirduvedi/counterstep/blob/main/docs/evidence/counterstep-cloud-run-repaired-2026-08-31.jpg).
+- Its Git blob hash, `f542ad444afccb28cc150878e661cd4ff667125f`, matches the published source. The portfolio labels it as a recorded run with sample data. It is not presented as a current live run or a recovery of real customer data.
+- The project description was checked against the current public Counterstep README. The portfolio links to its source and does not start recovery runs or call its hosted service.
 
 ## Atrium
 
@@ -33,4 +39,4 @@ The portfolio adds no phone notch, bezel content, or Dynamic Island. Each black 
 - Source Sans 3 is supplied by `@fontsource-variable/source-sans-3` under the SIL Open Font License.
 - Lucide supplies interface icons under the ISC License.
 
-Retired Atrium captures, the résumé PDF, and the discarded fluid-playground experiment are not included. The six project captures and generated Dayglass artwork are the only project-specific visual assets published with the site.
+Retired Atrium captures, the résumé PDF, and the discarded fluid-playground experiment are not included. The seven project captures and generated Dayglass artwork are the only project-specific visual assets published with the site.

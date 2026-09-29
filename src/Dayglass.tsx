@@ -87,7 +87,7 @@ export default function Dayglass({ now }: DayglassProps) {
       data-upper-level={upperLevel.toFixed(2)}
       data-lower-level={lowerLevel.toFixed(2)}
       data-fall-distance={fallDistance.toFixed(2)}
-      aria-label={`A hand-painted 24-hour hourglass marking ${percentage}% of the way through today.`}
+      aria-label={`A 24-hour hourglass showing ${percentage}% of the day elapsed.`}
     >
       <picture className="dayglass__vessel" aria-hidden="true">
         <img src={vesselPng} alt="" width="1536" height="1024" loading="eager" decoding="async" />
@@ -163,7 +163,7 @@ export default function Dayglass({ now }: DayglassProps) {
       </picture>
 
       <figcaption className="sr-only">
-        The sand follows local time, settling lower throughout the day while a continuous painted stream falls through the glass.
+        The lower chamber shows the part of the day that’s passed. The upper chamber shows the time left until midnight.
       </figcaption>
     </figure>
   )

@@ -88,10 +88,10 @@ export function ScrollScenes() {
 }
 
 const translations = [
-  { system: 'Permission', human: 'Trust', project: 'Agent Receipt' },
-  { system: 'Candidates', human: 'Choice', project: 'Autocomplete' },
-  { system: 'Hours', human: 'Perspective', project: 'Clock Museum' },
-  { system: 'Saved state', human: 'Continuity', project: 'Atrium' },
+  { system: 'Permissions', human: 'Trust', project: 'Agent Receipt' },
+  { system: 'Possible words', human: 'Your choice', project: 'Autocomplete' },
+  { system: 'Passing hours', human: 'Time left', project: 'Clock Museum' },
+  { system: 'Saved workouts', human: 'Keep going', project: 'Atrium' },
 ]
 
 function bridgePath(index: number, woven: boolean) {
@@ -103,8 +103,8 @@ function bridgePath(index: number, woven: boolean) {
 }
 
 export function MeaningBridge() {
-  return <figure className="meaning-bridge" aria-label="Four connections untangle from system state into human meaning: permission to trust, candidates to choice, hours to perspective, and saved state to continuity.">
-    <div className="meaning-bridge__labels"><span>System state<strong className="meaning-bridge__word--system">Systems</strong></span><span className="meaning-bridge__note">The common thread</span><span>Human context<strong className="meaning-bridge__word--people">People</strong></span></div>
+  return <figure className="meaning-bridge" aria-label="Four lines connect the projects to the people using them. Permissions connect to trust, possible words to your choice, passing hours to time left, and saved workouts to picking up again.">
+    <div className="meaning-bridge__labels"><span>What the software does<strong className="meaning-bridge__word--system">Systems</strong></span><span className="meaning-bridge__note">How they connect</span><span>What it means for you<strong className="meaning-bridge__word--people">People</strong></span></div>
     <div className="meaning-bridge__flow">
       <ol className="meaning-bridge__inputs">{translations.map(item => <li key={item.system}>{item.system}</li>)}</ol>
       <svg viewBox="0 0 1000 320" fill="none" aria-hidden="true" preserveAspectRatio="none">
@@ -120,7 +120,7 @@ export function MeaningBridge() {
       </svg>
       <ol className="meaning-bridge__outputs">{translations.map(item => <li key={item.human}><strong>{item.human}</strong><span>{item.project}</span></li>)}</ol>
     </div>
-    <figcaption><span>What the system knows.</span><span className="meaning-bridge__note">An interface makes the connection.</span><span>What it means to someone.</span></figcaption>
+    <figcaption><span>What’s happening.</span><span className="meaning-bridge__note">What the interface shows.</span><span>What you can do next.</span></figcaption>
   </figure>
 }
 
