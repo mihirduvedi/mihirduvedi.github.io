@@ -20,9 +20,7 @@
 .meaning-bridge__labels span:nth-child(2), .meaning-bridge figcaption span:nth-child(2) { text-align: center; }
 .meaning-bridge__labels span:last-child, .meaning-bridge figcaption span:last-child { text-align: right; }
 .meaning-bridge svg { width: 100%; height: clamp(150px, 23vw, 300px); display: block; margin-block: 16px; overflow: visible; }
-.meaning-bridge__axis { stroke: #9c806b; stroke-width: .5; stroke-dasharray: 2 6; opacity: .3; vector-effect: non-scaling-stroke; }
-.meaning-bridge__threads path { vector-effect: non-scaling-stroke; }
-.meaning-bridge__point { fill: var(--paper); stroke: #916446; stroke-width: 1.5; }
+.meaning-bridge__incoming path, .meaning-bridge__outgoing path { vector-effect: non-scaling-stroke; }
 .meaning-bridge figcaption { border-top: 1px solid #ad998555; padding-top: 18px; }
 .work-threshold { position: relative; }
 .work-threshold ol li a { position: relative; isolation: isolate; }
@@ -80,7 +78,8 @@ html[data-motion='paused'] .work-threshold ol li a::before,
 html[data-motion='paused'] .work-threshold ol li a .theme-glyph { transition: none; }
 @media (forced-colors: active) {
   .chapter-mark > span:first-child, .footer-signature > span:first-child { color: CanvasText; -webkit-text-stroke: 0; filter: none; opacity: 1; }
-  .chapter-mark path, .meaning-bridge__threads path, .meaning-bridge__point { stroke: CanvasText; }
+  .chapter-mark path, .meaning-bridge__incoming path, .meaning-bridge__outgoing path { stroke: CanvasText; }
+  .meaning-bridge__labels strong { color: CanvasText; filter: none; }
 }
 
 /* Crystal: optical surfaces, neutral highlights, and larger scroll passages. */
@@ -114,11 +113,15 @@ html[data-motion='paused'] .work-threshold ol li a .theme-glyph { transition: no
 .receipt-stage, .dayglass-stage, .atrium-screen { backface-visibility: hidden; }
 .orientation__aside { border-color: #9aa8af; color: #66737a; }
 .meaning-bridge { position: relative; }
-.meaning-bridge__words { position: absolute; inset: 12% 0 auto; display: flex; justify-content: space-between; pointer-events: none; color: transparent; -webkit-text-stroke: 1px #687b8970; font-family: var(--display); font-size: clamp(3.5rem, 10.5vw, 10.5rem); line-height: 1; letter-spacing: -.06em; opacity: 1; }
-.meaning-bridge svg { position: relative; }
+.meaning-bridge svg { position: relative; overflow: hidden; }
+.meaning-bridge__labels { align-items: end; }
+.meaning-bridge__labels strong { display: block; margin-top: 12px; font-family: var(--display); font-variation-settings: 'wdth' 95, 'wght' 420; font-size: clamp(2.8rem, 6.2vw, 6rem); line-height: 1.05; text-transform: none; letter-spacing: -.06em; color: #718390; filter: url(#bridge-hollow-outline); }
+.meaning-bridge__labels span:nth-child(2) strong { font-family: var(--body); font-size: .85rem; line-height: 2; font-weight: 400; letter-spacing: 0; color: #536672; filter: none; }
+@media (max-width: 760px) {
+  .meaning-bridge__labels strong { font-size: clamp(1.45rem, 6.5vw, 2.8rem); margin-top: 10px; }
+  .meaning-bridge__labels span:nth-child(2) strong { font-size: .72rem; }
+}
 .meaning-bridge__labels, .meaning-bridge figcaption { position: relative; color: #5a6a75; }
-.meaning-bridge__axis { stroke: #8597a4; }
-.meaning-bridge__point { stroke: #5e788c; }
 .meaning-bridge figcaption { border-color: #8c9aa64d; }
 .about-ledger > span { color: #c6d4df; }
 .footer-signature { overflow: clip; border-color: #8298ac40; }
@@ -131,9 +134,10 @@ html[data-motion='paused'] .work-threshold ol li a .theme-glyph { transition: no
   .meaning-bridge svg { height: clamp(160px, 22vh, 250px); }
 }
 @media (max-width: 900px) {
-  .meaning-bridge__words { font-size: 10vw; inset-block-start: 25%; }
   .exhibit-header h3 { overflow-wrap: normal; }
 }
-@media (prefers-reduced-motion: reduce) { .meaning-bridge__words { opacity: .25; } }
 
 body { overflow-x: clip; }
+@media (forced-colors: active) {
+  .meaning-bridge__labels strong, .meaning-bridge__labels span:nth-child(2) strong { color: CanvasText; filter: none; }
+}

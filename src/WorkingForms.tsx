@@ -5,7 +5,7 @@ import GlassSculpture from './GlassSculpture'
 
 const forms: Record<ThemeKey, { title: string; description: string; metaphor: string; steps: string[] }> = {
   trust: { title: 'A boundary you can inspect.', description: 'The glass boundary stands for the permission given to an agent. Agent Receipt checks whether its actions stayed inside it.', metaphor: 'An inspectable boundary', steps: ['Permission', 'Action', 'Evidence'] },
-  prediction: { title: 'Room for the next possibility.', description: 'The form opens from one point into many paths, just as Autocomplete turns a word fragment into possible continuations.', metaphor: 'One fragment, many paths', steps: ['A fragment', 'Possibilities', 'Your choice'] },
+  prediction: { title: 'Room for the next possibility.', description: 'Three glass ribbons unfold from one starting point. Autocomplete makes the same move from a word fragment to possible continuations.', metaphor: 'One fragment, many paths', steps: ['A fragment', 'Possibilities', 'Your choice'] },
   time: { title: 'A day, made visible.', description: 'Two chambers meet at a narrow present. Clock Museum makes the same passage visible as the day settles into an hourglass.', metaphor: 'Hours passing through the present', steps: ['Hours left', 'This moment', 'Day so far'] },
   recovery: { title: 'A way back to where you were.', description: 'The line bends away and returns without breaking. Atrium carries that idea into a workout you can resume after an interruption.', metaphor: 'A continuous way back', steps: ['Interrupted', 'Preserved', 'Resumed'] },
 }

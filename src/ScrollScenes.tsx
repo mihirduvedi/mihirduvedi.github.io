@@ -24,12 +24,12 @@ export function ScrollScenes() {
       const hero = gsap.timeline({ scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: .7 } })
       hero.fromTo('.hero__identity', { y: 0, opacity: 1 }, { y: 120 * distance, opacity: .35, ease: 'none' }, 0)
         .fromTo('.working-forms__art', { y: 0, rotate: 0, scale: 1 }, { y: -65 * distance, rotate: 9, scale: .82, ease: 'none' }, 0)
-      const orientation = gsap.timeline({ scrollTrigger: { trigger: '.orientation', start: 'top 65%', end: wide ? 'bottom 75%' : 'bottom 35%', scrub: .85 } })
+      const orientation = gsap.timeline({ scrollTrigger: { trigger: '.orientation', start: 'top 65%', end: wide ? 'bottom 95%' : 'bottom 65%', scrub: .75 } })
       orientation.fromTo('.orientation__grid > p', { y: 80 * distance }, { y: 0, duration: .35, ease: 'power2.out' }, 0)
-        .fromTo('.meaning-bridge__threads', { scaleY: .14, scaleX: .65, rotate: -10, transformOrigin: '50% 50%' }, { scaleY: 1.25, scaleX: 1, rotate: 0, duration: .9, ease: 'sine.inOut' }, .05)
-        .fromTo('.meaning-bridge__threads path', { strokeDasharray: 1400, strokeDashoffset: 1400 }, { strokeDashoffset: 0, stagger: .008, duration: .8, ease: 'power1.inOut' }, .05)
-        .fromTo('.meaning-bridge__word--systems', { xPercent: -25, opacity: .15 }, { xPercent: 0, opacity: .85, duration: .9, ease: 'none' }, 0)
-        .fromTo('.meaning-bridge__word--people', { xPercent: 25, opacity: .15 }, { xPercent: 0, opacity: .85, duration: .9, ease: 'none' }, 0)
+        .fromTo('.meaning-bridge__incoming path', { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, stagger: .025, duration: .4, ease: 'sine.inOut' }, 0)
+        .fromTo('.meaning-bridge__lens', { scaleX: .6, rotate: -18, transformOrigin: '50% 50%', opacity: .4 }, { scaleX: 1, rotate: 12, opacity: 1, duration: .85, ease: 'sine.inOut' }, .1)
+        .fromTo('.meaning-bridge__outgoing path', { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, stagger: .03, duration: .45, ease: 'sine.inOut' }, .35)
+        .fromTo('.meaning-bridge__destinations circle', { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, stagger: .03, duration: .2, ease: 'power2.out' }, .78)
       gsap.fromTo('.work-threshold h2', { y: 110 * distance, rotate: -4 }, { y: 0, rotate: 0, ease: 'power2.out', scrollTrigger: { trigger: '.work-threshold', start: 'top 90%', end: 'top 25%', scrub: .7 } })
       gsap.fromTo('.work-threshold li', { x: 150 * distance, opacity: .25 }, { x: 0, opacity: 1, stagger: .13, ease: 'power2.out', scrollTrigger: { trigger: '.work-threshold', start: 'top 75%', end: 'bottom 80%', scrub: .65 } })
       document.querySelectorAll<HTMLElement>('.exhibit').forEach((exhibit, i) => {
@@ -82,22 +82,28 @@ export function ScrollScenes() {
   return <div className="reading-thread" aria-hidden="true" />
 }
 
-function threadPath(index: number) {
-  const t = (index - 24) / 24
-  const left = 150 + t * 108, right = 150 - t * 108
-  const center = 150 + Math.sin(t * Math.PI * .95) * 26
-  return `M0 ${left} C240 ${left}, 345 ${center}, 600 ${center} S960 ${right}, 1200 ${right}`
-}
-
 export function MeaningBridge() {
-  return <figure className="meaning-bridge" aria-label="A woven thread diagram connects system state to human context through an interface.">
-    <div className="meaning-bridge__words" aria-hidden="true"><span className="meaning-bridge__word--systems">Systems</span><span className="meaning-bridge__word--people">People</span></div>
-    <div className="meaning-bridge__labels"><span>System state</span><span>The interface</span><span>Human context</span></div>
-    <svg viewBox="0 0 1200 300" fill="none" aria-hidden="true" preserveAspectRatio="none">
-      <defs><linearGradient id="thread-ink"><stop stopColor="#a5b1bb" /><stop offset=".5" stopColor="#394b5c" /><stop offset="1" stopColor="#a5b1bb" /></linearGradient></defs>
-      <path className="meaning-bridge__axis" d="M0 150H1200M600 5V295" />
-      <g className="meaning-bridge__threads">{Array.from({ length: 49 }, (_, i) => <path key={i} d={threadPath(i)} pathLength="1400" stroke="url(#thread-ink)" strokeWidth={i % 12 === 0 ? 1.8 : .8} opacity={i % 12 === 0 ? .9 : .5} />)}</g>
-      <circle cx="600" cy="150" r="5" className="meaning-bridge__point" />
+  const paths = Array.from({ length: 8 }, (_, i) => ({ entry: 104 + i * 16, waist: 139 + i * 6, exit: 41 + i * 34 }))
+  return <figure className="meaning-bridge" aria-label="Paths from a system pass through a glass lens and separate into clear choices for people.">
+    <div className="meaning-bridge__labels"><span>System state<strong>Systems</strong></span><span>The interface<strong>Made clear</strong></span><span>Human context<strong>People</strong></span></div>
+    <svg viewBox="0 0 1200 320" fill="none" aria-hidden="true" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="signal-ink" x1="0" x2="1"><stop stopColor="#9fadb5" stopOpacity=".3"/><stop offset=".48" stopColor="#657a88"/><stop offset="1" stopColor="#8099a7"/></linearGradient>
+        <linearGradient id="lens-glass" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#ffffff" stopOpacity=".95"/><stop offset=".18" stopColor="#c6d5de" stopOpacity=".6"/><stop offset=".4" stopColor="#f4f8fa" stopOpacity=".1"/><stop offset=".72" stopColor="#8b9fac" stopOpacity=".55"/><stop offset=".88" stopColor="#ffffff" stopOpacity=".95"/><stop offset="1" stopColor="#a3b4be" stopOpacity=".6"/></linearGradient>
+        <linearGradient id="lens-edge"><stop stopColor="#8196a4"/><stop offset=".4" stopColor="#fff"/><stop offset="1" stopColor="#798d9b"/></linearGradient>
+        <radialGradient id="lens-light"><stop stopColor="#fff" stopOpacity=".9"/><stop offset="1" stopColor="#fff" stopOpacity="0"/></radialGradient>
+      </defs>
+      <g className="meaning-bridge__incoming" stroke="url(#signal-ink)" strokeWidth="2.5">{paths.map((p, i) => <path key={i} pathLength="1" d={`M12 ${p.entry} C210 ${p.entry-42}, 350 ${p.waist+35}, 600 ${p.waist}`}/>)}</g>
+      <g className="meaning-bridge__outgoing" stroke="url(#signal-ink)" strokeWidth="2.5">{paths.map((p, i) => <path key={i} pathLength="1" d={`M600 ${p.waist} C820 ${p.waist-25}, 840 ${p.exit}, 1182 ${p.exit}`}/>)}</g>
+      <g className="meaning-bridge__destinations" fill="#758e9e">{paths.map((p, i) => <circle key={i} cx="1182" cy={p.exit} r="3.2"/>)}</g>
+      <g className="meaning-bridge__lens">
+        <ellipse cx="600" cy="170" rx="98" ry="129" fill="#647a8b" opacity=".06"/>
+        <ellipse cx="600" cy="160" rx="82" ry="126" fill="url(#lens-glass)" stroke="url(#lens-edge)" strokeWidth="1.5"/>
+        <ellipse cx="600" cy="160" rx="67" ry="114" stroke="#fff" strokeWidth="1.5" opacity=".7"/>
+        <ellipse cx="576" cy="107" rx="50" ry="65" fill="url(#lens-light)"/>
+        <path d="M557 70C526 117 529 196 554 239" stroke="#fff" strokeWidth="5" strokeLinecap="round" opacity=".9"/>
+        <path d="M649 91C673 144 665 214 640 250" stroke="#fff" strokeWidth="2" strokeLinecap="round" opacity=".8"/>
+      </g>
     </svg>
     <figcaption><span>What happened.</span><span>What it means.</span><span>What happens next.</span></figcaption>
   </figure>

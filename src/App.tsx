@@ -439,6 +439,13 @@ export default function App() {
   return <>
     <svg className="filter-definitions" width="0" height="0" aria-hidden="true">
       <defs>
+        <filter id="bridge-hollow-outline" x="-4%" y="-10%" width="108%" height="120%" colorInterpolationFilters="sRGB">
+          <feMorphology in="SourceAlpha" operator="dilate" radius=".55" result="outside" />
+          <feMorphology in="SourceAlpha" operator="erode" radius=".55" result="inside" />
+          <feComposite in="outside" in2="inside" operator="out" result="outline" />
+          <feFlood floodColor="#718390" result="outline-color" />
+          <feComposite in="outline-color" in2="outline" operator="in" />
+        </filter>
         <filter id="hero-hollow-outline" x="-4%" y="-8%" width="108%" height="116%" colorInterpolationFilters="sRGB">
           <feMorphology in="SourceAlpha" operator="dilate" radius="1.45" result="outside" />
           <feMorphology in="SourceAlpha" operator="erode" radius="1.45" result="inside" />

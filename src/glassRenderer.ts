@@ -11,38 +11,62 @@ const surface = `
 uniform float flowTime;
 uniform vec4 formWeights;
 attribute vec2 surfaceUv;
+attribute float ribbonIndex;
 const float TAU = 6.28318530718;
 vec3 loopCenter(float u) {
   float a = 1.0 + cos(u)*cos(u);
-  return vec3(1.7*sin(u)/a, 1.9*sin(u)*cos(u)/a, .32*cos(u));
+  float t = flowTime;
+  return vec3((1.65+.16*sin(t*1.05))*sin(u)/a, (1.9+.22*cos(t*.85))*sin(u)*cos(u)/a, .4*cos(u)+.17*sin(u*3.0-t*1.1));
+}
+vec3 ribbonCenter(float q, float branch) {
+  float t = flowTime;
+  float fan = pow(max(q,0.0),1.15);
+  return vec3(
+    -1.45 + 2.8*q + .16*sin(q*TAU-t*.9)*sin(q*3.14159),
+    (branch-1.0)*fan*1.05 + .36*sin(q*5.5-t*1.15+branch*.9)*sin(q*2.5),
+    .46*sin(q*5.8-t*.9+branch*1.8)*sin(q*2.7)
+  );
 }
 vec3 formPoint(vec2 st) {
   float u = st.x * TAU, v = st.y * TAU;
   float t = flowTime;
   vec3 p = vec3(0.0);
   if (formWeights.x > .0001) {
-    float tube = .37 + .045*sin(u*3.0-t*.65);
-    float angle = v + .35*sin(u*2.0+t*.3);
-    p += formWeights.x * vec3((1.0+tube*cos(angle))*cos(u), (1.0+tube*cos(angle))*sin(u), tube*sin(angle));
+    float tube = .31 + .075*sin(u*3.0-t*1.5);
+    float ring = .98 + .15*sin(u*2.0-t*1.05) + .06*cos(u*3.0+t*.7);
+    float angle = v + .6*sin(u*2.0+t*.7);
+    p += formWeights.x * vec3((ring+tube*cos(angle))*cos(u), (ring+tube*cos(angle))*sin(u), tube*sin(angle)+.22*sin(u*2.0-t*.95));
   }
   if (formWeights.y > .0001) {
-    float r = .11 + pow(max(st.x, .001), .8)*.99;
-    p += formWeights.y * vec3((st.x-.5)*2.8, r*sin(v), r*cos(v)*.8);
+    float q = st.x;
+    float rv = (st.y*3.0-ribbonIndex)*TAU;
+    vec3 tangent = normalize(ribbonCenter(q+.002,ribbonIndex)-ribbonCenter(q-.002,ribbonIndex));
+    vec3 normal = normalize(cross(tangent,vec3(0.0,0.0,1.0)));
+    vec3 binormal = normalize(cross(normal,tangent));
+    float twist = q*2.6 + .8*sin(q*4.5-t*1.1+ribbonIndex*1.4);
+    vec3 across = normal*cos(twist)+binormal*sin(twist);
+    vec3 depth = -normal*sin(twist)+binormal*cos(twist);
+    float width = .025 + .3*pow(max(sin(q*3.14159),0.0),.7);
+    float thickness = .025 + .085*sin(q*3.14159);
+    p += formWeights.y * (ribbonCenter(q,ribbonIndex)+width*cos(rv)*across+thickness*sin(rv)*depth);
   }
   if (formWeights.z > .0001) {
     float y = (st.x-.5)*2.7;
-    float r = .13 + .73*pow(abs(y)/1.35, 1.18);
-    p += formWeights.z * vec3(r*cos(v+y*.4), y, r*sin(v+y*.4));
+    float r = .14 + .7*pow(abs(y)/1.35, 1.18);
+    r *= 1.0 + .13*sin(v*3.0+y*2.5-t*1.35);
+    float bend = .18*sin(y*2.0-t*.95);
+    p += formWeights.z * vec3(r*cos(v+y*.7+t*.22)+bend, y+.055*sin(v*2.0-t)*abs(y), r*sin(v+y*.7+t*.22));
   }
   if (formWeights.w > .0001) {
     vec3 tangent = normalize(loopCenter(u+.005)-loopCenter(u-.005));
     vec3 normal = normalize(cross(tangent,vec3(0.0,0.0,1.0)));
-    vec3 binormal = normalize(cross(tangent,normal));
-    p += formWeights.w * (loopCenter(u) + .235*(normal*cos(v)+binormal*sin(v)));
+    vec3 binormal = normalize(cross(normal,tangent));
+    float tube = .22 + .045*sin(u*3.0-t*1.4);
+    p += formWeights.w * (loopCenter(u) + tube*(normal*cos(v)+binormal*sin(v)));
   }
-  float wave = .027*sin(p.y*2.6+t*.8) + .019*cos(p.x*3.0-t*.65);
+  float wave = .07*sin(p.y*2.6+t*1.1) + .04*cos(p.x*3.0-t*.9);
   p.x += wave;
-  p.z += .04*sin(p.y*2.0+p.x-t*.7);
+  p.z += .085*sin(p.y*2.0+p.x-t*1.0);
   return p;
 }
 `
@@ -67,8 +91,27 @@ export function createGlassRenderer(canvas: HTMLCanvasElement, theme: ThemeKey, 
   scene.environmentIntensity = 1.35
   environment.dispose(); pmrem.dispose()
 
-  const geometry = new THREE.PlaneGeometry(1, 1, 120, 64)
+  // Three independent bands meet seamlessly in the closed forms, then open
+  // into separate ribbons. Duplicated seam vertices avoid connecting triangles.
+  const geometry = new THREE.BufferGeometry()
+  const positions: number[] = [], uvs: number[] = [], bands: number[] = [], indices: number[] = []
+  const columns = 120, rows = 24
+  for (let band = 0; band < 3; band++) {
+    const offset = positions.length / 3
+    for (let row = 0; row <= rows; row++) for (let col = 0; col <= columns; col++) {
+      positions.push(0, 0, 0); uvs.push(col / columns, (band + row / rows) / 3); bands.push(band)
+      if (row < rows && col < columns) {
+        const a = offset + row * (columns + 1) + col, b = a + 1, d = a + columns + 1, c = d + 1
+        indices.push(a, b, d, b, c, d)
+      }
+    }
+  }
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('normal', new THREE.Float32BufferAttribute(positions.map(() => 0), 3))
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
   geometry.setAttribute('surfaceUv', geometry.attributes.uv)
+  geometry.setAttribute('ribbonIndex', new THREE.Float32BufferAttribute(bands, 1))
+  geometry.setIndex(indices)
   const material = new THREE.MeshPhysicalMaterial({
     color: '#f1f5f7', metalness: 0, roughness: .08, transmission: 1,
     thickness: .3, ior: 1.28, clearcoat: .6, clearcoatRoughness: .08,
@@ -101,7 +144,7 @@ export function createGlassRenderer(canvas: HTMLCanvasElement, theme: ThemeKey, 
   }
   const gridGeometry = new THREE.BufferGeometry()
   gridGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePoints, 3))
-  const gridMaterial = new THREE.LineBasicMaterial({ color: 0x29343d })
+  const gridMaterial = new THREE.LineBasicMaterial({ color: 0x18222b })
   const grid = new THREE.LineSegments(gridGeometry, gridMaterial)
   scene.add(grid)
 
@@ -134,9 +177,10 @@ export function createGlassRenderer(canvas: HTMLCanvasElement, theme: ThemeKey, 
       tiltY += (pointerY - tiltY) * ease
     }
     uniforms.flowTime.value = time
-    mesh.rotation.x = .2 + Math.sin(time * .17) * .12 + tiltY * .12
-    mesh.rotation.y = -.2 + Math.sin(time * .19) * .36 + tiltX * .2
-    mesh.rotation.z = -.28 * (1 - weights.z) + Math.sin(time * .12) * .06
+    mesh.rotation.x = .18 + Math.sin(time * .42) * .23 + tiltY * .16
+    mesh.rotation.y = -.2 + Math.sin(time * .36) * .5 + Math.sin(time*.73)*.1 + tiltX * .24
+    mesh.rotation.z = -.2 * (1 - weights.z) + Math.sin(time * .31) * .15
+    mesh.position.y = Math.sin(time*.8)*.06
     renderer.render(scene, camera)
     if (!paused) schedule()
   }
@@ -147,7 +191,7 @@ export function createGlassRenderer(canvas: HTMLCanvasElement, theme: ThemeKey, 
     if (!width || !height || disposed) return
     renderer.setSize(width, height, false)
     camera.aspect = width / height
-    camera.position.z = width / height < 1.05 ? 7.2 : 6.1
+    camera.position.z = width / height < 1.05 ? 7.5 : 6.5
     camera.updateProjectionMatrix()
     cancelAnimationFrame(frame); frame = 0
     render(performance.now())

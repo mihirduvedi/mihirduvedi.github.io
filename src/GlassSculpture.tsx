@@ -33,7 +33,7 @@ export default function GlassSculpture({ theme }: { theme: ThemeKey }) {
       <defs><linearGradient id={`${id}-glass`} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff" stopOpacity=".85"/><stop offset=".3" stopColor="#9faebd" stopOpacity=".12"/><stop offset=".55" stopColor="#f4f8ff" stopOpacity=".6"/><stop offset=".8" stopColor="#6e7b86" stopOpacity=".08"/><stop offset="1" stopColor="#fff" stopOpacity=".8"/></linearGradient></defs>
       <g stroke={`url(#${id}-glass)`} strokeWidth="20">
         {theme === 'trust' && <ellipse cx="250" cy="200" rx="120" ry="100" transform="rotate(-28 250 200)"/>}
-        {theme === 'prediction' && <path d="M100 200Q250 185 385 75M100 200Q250 205 385 325M100 200Q240 200 390 200"/>}
+        {theme === 'prediction' && <path d="M100 200C175 205 205 45 310 85S355 135 405 70M100 200C180 165 220 295 300 275S365 215 405 325M100 200C180 235 250 145 315 185S370 225 410 190"/>}
         {theme === 'time' && <path d="M155 65C155 175 345 225 345 335M345 65C345 175 155 225 155 335M155 65H345M155 335H345"/>}
         {theme === 'recovery' && <path d="M250 200C100 -20 30 230 135 270C240 305 270 95 370 130C475 170 410 410 250 200Z"/>}
       </g>
