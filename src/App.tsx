@@ -13,7 +13,7 @@ import { atlasProjects, workingQuestions } from './data'
 import WorkingForms, { ThemeGlyph } from './WorkingForms'
 import { MotionProvider, useMotion } from './motion'
 import { mountLiquidGlass } from './liquidGlass'
-import { ScrollScenes, MeaningBridge, ChapterMark } from './ScrollScenes'
+import { ScrollScenes, MeaningBridge, ChapterMark, ExhibitTitle } from './ScrollScenes'
 
 export { getSuggestions } from './autocomplete'
 
@@ -162,7 +162,7 @@ function Hero() {
 
 function Orientation() {
   return <section className="orientation paper-space" data-scene="orientation">
-    <div className="page-shell">
+    <div className="page-shell orientation__stage">
       <div className="orientation__grid">
         <div className="orientation__aside"><span className="plate-label">The common thread</span><span>Systems ↔ people</span></div>
         <p>I study computer science and Spanish because I care about how systems carry meaning between machines, between people, and between the two.</p>
@@ -186,12 +186,12 @@ function ReceiptExhibit() {
       <div className="page-shell"><ChapterMark number="01" theme="Trust" /></div>
       <div className="page-shell exhibit-grid">
         <header className="exhibit-header">
-          <p className="plate-label"><ThemeGlyph theme="trust" />01 / Trust</p><h3>Agent Receipt</h3>
+          <p className="plate-label"><ThemeGlyph theme="trust" />01 / Trust</p><ExhibitTitle title="Agent Receipt" />
           <p className="exhibit-premise">When an AI agent acts, its operator needs more than a log.</p>
           <p className="exhibit-description">Agent Receipt compares the action trace with the authority a person granted, then makes the difference reviewable.</p>
           <a className="text-link" href={receiptUrl} target="_blank" rel="noreferrer">View source <ExternalLink aria-hidden="true" /></a>
         </header>
-        <div className="media-glass receipt-stage"><div className="exhibit-windowbar"><span>Agent Receipt</span><span>Evidence viewer</span></div><img src={asset(state.image)} width="1280" height="720" alt={state.alt} loading="lazy" decoding="async" /><p aria-live="polite">{state.note}</p></div>
+        <div className="media-reveal-track"><div className="media-glass receipt-stage"><div className="exhibit-windowbar"><span>Agent Receipt</span><span>Evidence viewer</span></div><img src={asset(state.image)} width="1280" height="720" alt={state.alt} loading="lazy" decoding="async" /><p aria-live="polite">{state.note}</p></div></div>
         <div className="state-selector" role="group" aria-label="Agent Receipt views">
           {receiptStates.map((item, index) => (
             <button key={item.key} type="button" aria-pressed={stateKey === item.key} onClick={() => setStateKey(item.key)}>
@@ -247,7 +247,7 @@ function AutocompleteExhibit() {
       <div className="page-shell"><ChapterMark number="02" theme="Prediction" /></div>
       <div className="page-shell autocomplete-grid">
         <header className="exhibit-header">
-          <p className="plate-label"><ThemeGlyph theme="prediction" />02 / Prediction</p><h3>Autocomplete</h3>
+          <p className="plate-label"><ThemeGlyph theme="prediction" />02 / Prediction</p><ExhibitTitle title="Autocomplete" />
           <p className="exhibit-premise">A useful prediction should be quick to inspect and easy to reject.</p>
           <p className="exhibit-description">This browser study uses the project’s real Pride and Prejudice vocabulary and its Trie-plus-bigram candidate rule. The full engine adds a character LSTM to rerank the same candidates.</p>
           <a className="text-link text-link--dark" href={autocompleteUrl} target="_blank" rel="noreferrer">Open the full engine <ExternalLink aria-hidden="true" /></a>
@@ -292,7 +292,7 @@ function ClockExhibit() {
       <div className="page-shell"><ChapterMark number="03" theme="Time" /></div>
       <div className="page-shell clock-grid">
         <header className="exhibit-header">
-          <p className="plate-label"><ThemeGlyph theme="time" />03 / Time</p><h3>Clock Museum</h3>
+          <p className="plate-label"><ThemeGlyph theme="time" />03 / Time</p><ExhibitTitle title="Clock Museum" />
           <p className="exhibit-premise">This hourglass turns the whole day into one slow pour.</p>
           <p className="exhibit-description">It follows your local time: the day so far settles below, while the hours left stay above.</p>
           <a className="text-link" href={githubUrl} target="_blank" rel="noreferrer">Browse my GitHub <ExternalLink aria-hidden="true" /></a>
@@ -325,7 +325,7 @@ function AtriumExhibit() {
       <div className="page-shell"><ChapterMark number="04" theme="Recovery" /></div>
       <div className="page-shell atrium-grid">
         <header className="exhibit-header">
-          <p className="plate-label"><ThemeGlyph theme="recovery" />04 / Recovery</p><h3>Atrium</h3>
+          <p className="plate-label"><ThemeGlyph theme="recovery" />04 / Recovery</p><ExhibitTitle title="Atrium" />
           <p className="exhibit-premise">A workout should survive the moment the network or the app does not.</p>
           <p className="exhibit-description">Atrium keeps an active session on the device, restores interrupted work, and reconciles it with the training record when the app returns.</p>
         </header>

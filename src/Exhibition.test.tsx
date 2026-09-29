@@ -1,8 +1,8 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { MeaningBridge, ScrollScenes } from './ScrollScenes'
-import { MotionProvider, useMotion } from './motion'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { MotionProvider } from './motion'
 import WorkingForms from './WorkingForms'
 
 afterEach(() => { localStorage.clear(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
@@ -88,61 +88,34 @@ describe('working forms exhibition', () => {
 
 })
 
-function MotionSwitch() {
-  const { paused, toggle } = useMotion()
-  return <button onClick={toggle}>{paused ? 'Resume scenes' : 'Pause scenes'}</button>
-}
-
 describe('scroll choreography preferences', () => {
-  it('responds to native scroll, restores static art on pause, and cleans up on unmount', () => {
-    let top = 600
-    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(() => ({
-      x: 0, y: top, top, bottom: top + 300, left: 0, right: 1200, width: 1200, height: 300, toJSON() {},
-    }))
-    const frames = new Map<number, FrameRequestCallback>()
-    let nextFrame = 0
-    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { frames.set(++nextFrame, callback); return nextFrame })
-    vi.stubGlobal('cancelAnimationFrame', (id: number) => frames.delete(id))
-    const flush = () => act(() => { const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(16)) })
-    const view = render(<MotionProvider><ScrollScenes /><MotionSwitch /><section data-scene="orientation"><p>The content stays readable.</p><MeaningBridge /></section></MotionProvider>)
-    const path = document.querySelector('.meaning-bridge__threads path')!
-    const initial = path.getAttribute('d')
-    top = 100
-    fireEvent.scroll(window); flush()
-    expect(path.getAttribute('d')).not.toBe(initial)
-    expect(screen.getByText('The content stays readable.')).toBeVisible()
-    fireEvent.click(screen.getByRole('button', { name: 'Pause scenes' }))
+  it('reverts its timelines on pause and cleans up all triggers on unmount', () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('min-width: 901px'), media: query, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} }))
+    const view = render(<App />)
+    expect(ScrollTrigger.getAll().length).toBeGreaterThan(0)
+    fireEvent.click(screen.getByRole('button', { name: 'Pause motion' }))
+    expect(ScrollTrigger.getAll()).toHaveLength(0)
     expect(document.documentElement).not.toHaveAttribute('data-scroll-scenes')
-    const paused = path.getAttribute('d')
-    top = 400
-    fireEvent.scroll(window); flush()
-    expect(path.getAttribute('d')).toBe(paused)
-    fireEvent.click(screen.getByRole('button', { name: 'Resume scenes' }))
-    expect(document.documentElement).toHaveAttribute('data-scroll-scenes', 'on')
+    expect(screen.getByRole('heading', { name: 'Agent Receipt' })).toBeVisible()
+    expect(document.querySelector('.title-word > span')?.getAttribute('style') || '').not.toContain('transform')
+    fireEvent.click(screen.getByRole('button', { name: 'Enable motion' }))
+    expect(ScrollTrigger.getAll().length).toBeGreaterThan(0)
     view.unmount()
+    expect(ScrollTrigger.getAll()).toHaveLength(0)
     expect(document.documentElement).not.toHaveAttribute('data-scroll-scenes')
-    expect(frames.size).toBe(0)
   })
 })
 
-describe('static sculpture selection', () => {
-  it('redraws the geometry immediately when another idea is selected while paused', () => {
+describe('glass fallback selection', () => {
+  it('keeps every idea and destination usable with no WebGL and motion paused', async () => {
     localStorage.setItem('portfolio-motion', 'paused')
-    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }))
-    vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
-    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ x: 0, y: 0, top: 0, bottom: 400, left: 0, right: 600, width: 600, height: 400, toJSON() {} })
-    let geometry = 0, draws = 0
-    const context = {
-      clearRect() { geometry = 0; draws++ }, setTransform() {}, beginPath() {}, stroke() {},
-      moveTo(x: number, y: number) { geometry += x * .3 + y * .7 },
-      lineTo(x: number, y: number) { geometry += x * .3 + y * .7 },
-    }
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context as unknown as CanvasRenderingContext2D)
     render(<MotionProvider><WorkingForms /></MotionProvider>)
-    const firstGeometry = geometry, firstDraws = draws
+    await waitFor(() => expect(document.querySelector('.glass-sculpture')).toHaveAttribute('data-renderer', 'fallback'))
+    const initial = document.querySelector('.glass-fallback')?.innerHTML
     fireEvent.click(screen.getByRole('button', { name: '03 Time' }))
-    expect(draws).toBeGreaterThan(firstDraws)
-    expect(geometry).not.toBe(firstGeometry)
+    expect(document.querySelector('.glass-sculpture')).toHaveAttribute('data-theme', 'time')
+    expect(document.querySelector('.glass-fallback')?.innerHTML).not.toBe(initial)
     expect(screen.getByRole('link', { name: 'Explore Clock Museum' })).toBeInTheDocument()
+    expect(document.documentElement).toHaveAttribute('data-motion', 'paused')
   })
 })

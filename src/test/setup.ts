@@ -30,3 +30,11 @@ Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
   writable: true,
   value: () => null,
 })
+
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: (query: string) => ({ matches: false, media: query, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent() { return true } }),
+})
+Object.defineProperty(window, 'scrollTo', { writable: true, value: () => undefined })
+
+Object.defineProperty(window, 'ResizeObserver', { writable: true, value: class { observe() {} unobserve() {} disconnect() {} } })
