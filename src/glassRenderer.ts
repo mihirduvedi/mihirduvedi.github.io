@@ -11,22 +11,20 @@ const surface = `
 uniform float flowTime;
 uniform vec4 formWeights;
 attribute vec2 surfaceUv;
-attribute float ribbonIndex;
+attribute float orbitIndex;
 const float TAU = 6.28318530718;
 vec3 loopCenter(float u) {
   float a = 1.0 + cos(u)*cos(u);
   float t = flowTime;
   return vec3((1.65+.16*sin(t*1.05))*sin(u)/a, (1.9+.22*cos(t*.85))*sin(u)*cos(u)/a, .4*cos(u)+.17*sin(u*3.0-t*1.1));
 }
-vec3 ribbonCenter(float q, float branch) {
+vec3 knotCenter(float u) {
   float t = flowTime;
-  float fan = pow(max(q,0.0),1.15);
-  return vec3(
-    -1.45 + 2.8*q + .16*sin(q*TAU-t*.9)*sin(q*3.14159),
-    (branch-1.0)*fan*1.05 + .36*sin(q*5.5-t*1.15+branch*.9)*sin(q*2.5),
-    .46*sin(q*5.8-t*.9+branch*1.8)*sin(q*2.7)
-  );
+  float r = .49*(2.0 + .72*cos(3.0*u-t*.24));
+  return vec3(r*cos(2.0*u), r*sin(2.0*u), .48*sin(3.0*u-t*.24));
 }
+vec3 turnX(vec3 p, float a) { return vec3(p.x, cos(a)*p.y-sin(a)*p.z, sin(a)*p.y+cos(a)*p.z); }
+vec3 turnY(vec3 p, float a) { return vec3(cos(a)*p.x+sin(a)*p.z, p.y, -sin(a)*p.x+cos(a)*p.z); }
 vec3 formPoint(vec2 st) {
   float u = st.x * TAU, v = st.y * TAU;
   float t = flowTime;
@@ -38,24 +36,23 @@ vec3 formPoint(vec2 st) {
     p += formWeights.x * vec3((ring+tube*cos(angle))*cos(u), (ring+tube*cos(angle))*sin(u), tube*sin(angle)+.22*sin(u*2.0-t*.95));
   }
   if (formWeights.y > .0001) {
-    float q = st.x;
-    float rv = (st.y*3.0-ribbonIndex)*TAU;
-    vec3 tangent = normalize(ribbonCenter(q+.002,ribbonIndex)-ribbonCenter(q-.002,ribbonIndex));
+    vec3 tangent = normalize(knotCenter(u+.003)-knotCenter(u-.003));
     vec3 normal = normalize(cross(tangent,vec3(0.0,0.0,1.0)));
     vec3 binormal = normalize(cross(normal,tangent));
-    float twist = q*2.6 + .8*sin(q*4.5-t*1.1+ribbonIndex*1.4);
-    vec3 across = normal*cos(twist)+binormal*sin(twist);
-    vec3 depth = -normal*sin(twist)+binormal*cos(twist);
-    float width = .025 + .3*pow(max(sin(q*3.14159),0.0),.7);
-    float thickness = .025 + .085*sin(q*3.14159);
-    p += formWeights.y * (ribbonCenter(q,ribbonIndex)+width*cos(rv)*across+thickness*sin(rv)*depth);
+    float tube = .19 + .025*sin(3.0*u-t*1.25);
+    p += formWeights.y * (knotCenter(u)+tube*(normal*cos(v)+binormal*sin(v)));
   }
   if (formWeights.z > .0001) {
-    float y = (st.x-.5)*2.7;
-    float r = .14 + .7*pow(abs(y)/1.35, 1.18);
-    r *= 1.0 + .13*sin(v*3.0+y*2.5-t*1.35);
-    float bend = .18*sin(y*2.0-t*.95);
-    p += formWeights.z * vec3(r*cos(v+y*.7+t*.22)+bend, y+.055*sin(v*2.0-t)*abs(y), r*sin(v+y*.7+t*.22));
+    // Three closed orbits turn at independent rates. Their radii leave enough
+    // clearance to avoid intersections as the planes sweep through one another.
+    float rv = (st.y*3.0-orbitIndex)*TAU;
+    float r = 1.28-orbitIndex*.32;
+    float tube = .115+.016*sin(3.0*u-t*1.1+orbitIndex);
+    vec3 orbit = vec3((r+tube*cos(rv))*cos(u), (r+tube*cos(rv))*sin(u), tube*sin(rv));
+    float tilt = orbitIndex < .5 ? .28+.48*sin(t*.48) : .28+orbitIndex*.72+t*(.18+orbitIndex*.055);
+    orbit = turnX(orbit, tilt);
+    orbit = turnY(orbit, -.2+orbitIndex*.65 + sin(t*.32+orbitIndex)*.38);
+    p += formWeights.z * orbit;
   }
   if (formWeights.w > .0001) {
     vec3 tangent = normalize(loopCenter(u+.005)-loopCenter(u-.005));
@@ -91,11 +88,11 @@ export function createGlassRenderer(canvas: HTMLCanvasElement, theme: ThemeKey, 
   scene.environmentIntensity = 1.35
   environment.dispose(); pmrem.dispose()
 
-  // Three independent bands meet seamlessly in the closed forms, then open
-  // into separate ribbons. Duplicated seam vertices avoid connecting triangles.
+  // Three bands form one continuous surface for the ring, knot, and infinity.
+  // In Time each band closes into a separate orbit, with no connecting triangles.
   const geometry = new THREE.BufferGeometry()
   const positions: number[] = [], uvs: number[] = [], bands: number[] = [], indices: number[] = []
-  const columns = 120, rows = 24
+  const columns = 192, rows = 20
   for (let band = 0; band < 3; band++) {
     const offset = positions.length / 3
     for (let row = 0; row <= rows; row++) for (let col = 0; col <= columns; col++) {
@@ -110,7 +107,7 @@ export function createGlassRenderer(canvas: HTMLCanvasElement, theme: ThemeKey, 
   geometry.setAttribute('normal', new THREE.Float32BufferAttribute(positions.map(() => 0), 3))
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
   geometry.setAttribute('surfaceUv', geometry.attributes.uv)
-  geometry.setAttribute('ribbonIndex', new THREE.Float32BufferAttribute(bands, 1))
+  geometry.setAttribute('orbitIndex', new THREE.Float32BufferAttribute(bands, 1))
   geometry.setIndex(indices)
   const material = new THREE.MeshPhysicalMaterial({
     color: '#f1f5f7', metalness: 0, roughness: .08, transmission: 1,

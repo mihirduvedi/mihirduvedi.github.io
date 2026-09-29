@@ -98,6 +98,9 @@ describe('scroll choreography preferences', () => {
     expect(document.documentElement).not.toHaveAttribute('data-scroll-scenes')
     expect(screen.getByRole('heading', { name: 'Agent Receipt' })).toBeVisible()
     expect(document.querySelector('.title-word > span')?.getAttribute('style') || '').not.toContain('transform')
+    document.querySelectorAll('.meaning-bridge__thread').forEach(path => {
+      expect(path.getAttribute('d')).toBe(path.getAttribute('data-open'))
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Enable motion' }))
     expect(ScrollTrigger.getAll().length).toBeGreaterThan(0)
     view.unmount()
