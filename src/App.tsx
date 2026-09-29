@@ -13,6 +13,7 @@ import { atlasProjects, workingQuestions } from './data'
 import WorkingForms, { ThemeGlyph } from './WorkingForms'
 import { MotionProvider, useMotion } from './motion'
 import { mountLiquidGlass } from './liquidGlass'
+import { ScrollScenes, MeaningBridge, ChapterMark } from './ScrollScenes'
 
 export { getSuggestions } from './autocomplete'
 
@@ -142,7 +143,7 @@ function Header() {
 
 function Hero() {
   return (
-    <section id="top" className="hero dark-space">
+    <section id="top" className="hero dark-space" data-scene="hero">
       <div className="page-shell hero__grid">
         <div className="hero__identity">
           <p className="hero__eyebrow"><span className="identity-mark" aria-hidden="true" />A museum of working ideas</p>
@@ -160,7 +161,15 @@ function Hero() {
 }
 
 function Orientation() {
-  return <section className="orientation paper-space"><div className="page-shell orientation__grid"><div className="orientation__aside"><span className="plate-label">The common thread</span><svg viewBox="0 0 200 180" fill="none" aria-hidden="true">{Array.from({ length: 19 }, (_, i) => <path key={i} d={`M 8 ${25 + i * 7} C ${60 + i * 2} ${25 + i * 7}, ${140 - i * 2} ${155 - i * 7}, 192 ${155 - i * 7}`} stroke="currentColor" strokeWidth=".8" />)}</svg><span>Systems ↔ people</span></div><p>I study computer science and Spanish because I care about how systems carry meaning between machines, between people, and between the two.</p></div></section>
+  return <section className="orientation paper-space" data-scene="orientation">
+    <div className="page-shell">
+      <div className="orientation__grid">
+        <div className="orientation__aside"><span className="plate-label">The common thread</span><span>Systems ↔ people</span></div>
+        <p>I study computer science and Spanish because I care about how systems carry meaning between machines, between people, and between the two.</p>
+      </div>
+      <MeaningBridge />
+    </div>
+  </section>
 }
 
 const receiptStates = [
@@ -173,7 +182,8 @@ function ReceiptExhibit() {
   const [stateKey, setStateKey] = useState<(typeof receiptStates)[number]['key']>('deviation')
   const state = receiptStates.find((item) => item.key === stateKey) ?? receiptStates[1]
   return (
-    <article id="agent-receipt" className="exhibit exhibit--receipt dark-space">
+    <article id="agent-receipt" className="exhibit exhibit--receipt dark-space" data-scene="exhibit">
+      <div className="page-shell"><ChapterMark number="01" theme="Trust" /></div>
       <div className="page-shell exhibit-grid">
         <header className="exhibit-header">
           <p className="plate-label"><ThemeGlyph theme="trust" />01 / Trust</p><h3>Agent Receipt</h3>
@@ -233,7 +243,8 @@ function AutocompleteExhibit() {
       : 'The full corpus could not load; the small local index is still available.'
 
   return (
-    <article id="autocomplete" className="exhibit exhibit--autocomplete paper-space">
+    <article id="autocomplete" className="exhibit exhibit--autocomplete paper-space" data-scene="exhibit">
+      <div className="page-shell"><ChapterMark number="02" theme="Prediction" /></div>
       <div className="page-shell autocomplete-grid">
         <header className="exhibit-header">
           <p className="plate-label"><ThemeGlyph theme="prediction" />02 / Prediction</p><h3>Autocomplete</h3>
@@ -277,7 +288,8 @@ function ClockExhibit() {
   const hours = displayedTime.getHours() + displayedTime.getMinutes() / 60
   const timeLabel = displayedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
   return (
-    <article id="clock-museum" className="exhibit exhibit--clocks dark-space">
+    <article id="clock-museum" className="exhibit exhibit--clocks dark-space" data-scene="exhibit">
+      <div className="page-shell"><ChapterMark number="03" theme="Time" /></div>
       <div className="page-shell clock-grid">
         <header className="exhibit-header">
           <p className="plate-label"><ThemeGlyph theme="time" />03 / Time</p><h3>Clock Museum</h3>
@@ -309,7 +321,8 @@ function AtriumExhibit() {
   const [viewKey, setViewKey] = useState<(typeof atriumViews)[number]['key']>('recover')
   const current = atriumViews.find((item) => item.key === viewKey) ?? atriumViews[0]
   return (
-    <article id="atrium" className="exhibit exhibit--atrium dark-space">
+    <article id="atrium" className="exhibit exhibit--atrium dark-space" data-scene="exhibit">
+      <div className="page-shell"><ChapterMark number="04" theme="Recovery" /></div>
       <div className="page-shell atrium-grid">
         <header className="exhibit-header">
           <p className="plate-label"><ThemeGlyph theme="recovery" />04 / Recovery</p><h3>Atrium</h3>
@@ -360,7 +373,7 @@ function ExhibitRail() {
 function Work() {
   return (
     <section id="work" aria-labelledby="work-heading">
-      <div className="work-threshold paper-space">
+      <div className="work-threshold paper-space" data-scene="index">
         <div className="page-shell work-threshold__grid">
           <div><p className="plate-label">Selected work / 2025–2026</p><h2 id="work-heading">Four systems under pressure.</h2></div>
           <ol>{atlasProjects.map((project) => <li key={project.key}><a href={project.href}><span>{project.index}</span><strong>{project.title}</strong><ThemeGlyph theme={project.key} /><ArrowDownRight aria-hidden="true" /></a></li>)}</ol>
@@ -377,7 +390,7 @@ function Questions() {
     <section id="questions" className="questions paper-space" aria-labelledby="questions-heading">
       <div className="page-shell questions-grid">
         <header><p className="plate-label">Questions I am still working on</p><h2 id="questions-heading">Field notes</h2></header>
-        <ol className="question-list">{workingQuestions.map((question) => <li key={question.number}><span>{question.number}</span><h3>{question.title}</h3></li>)}</ol>
+        <ol className="question-list">{workingQuestions.map((question) => <li key={question.number} data-scene="note"><span>{question.number}</span><h3>{question.title}</h3></li>)}</ol>
       </div>
     </section>
   )
@@ -407,7 +420,7 @@ function About() {
 
 function Footer() {
   return (
-    <footer className="site-footer dark-space"><div className="page-shell footer-grid"><p className="plate-label">Contact</p><h2>Let’s keep talking.</h2><a className="footer-contact" href={linkedInUrl} target="_blank" rel="noreferrer">Find me on LinkedIn <ArrowDownRight aria-hidden="true" /></a><a className="back-to-top" href="#top">Back to top <ArrowDown aria-hidden="true" /></a></div></footer>
+    <footer className="site-footer dark-space" data-scene="footer"><div className="page-shell footer-grid"><p className="plate-label">Contact</p><h2>Let’s keep talking.</h2><a className="footer-contact" href={linkedInUrl} target="_blank" rel="noreferrer">Find me on LinkedIn <ArrowDownRight aria-hidden="true" /></a><a className="back-to-top" href="#top">Back to top <ArrowDown aria-hidden="true" /></a></div><div className="page-shell footer-signature" aria-hidden="true"><span>Mihir Duvedi</span><span className="footer-signature__caption">A museum of working ideas</span></div></footer>
   )
 }
 
@@ -436,7 +449,7 @@ export default function App() {
       </defs>
     </svg>
     <a className="skip-link" href="#main">Skip to main content</a>
-    <MotionProvider><Header />
+    <MotionProvider><ScrollScenes /><Header />
     <main id="main"><Hero /><Orientation /><Work /><Questions /><About /></main>
     <Footer /></MotionProvider>
   </>

@@ -1,8 +1,11 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { MeaningBridge, ScrollScenes } from './ScrollScenes'
+import { MotionProvider, useMotion } from './motion'
+import WorkingForms from './WorkingForms'
 
-afterEach(() => { localStorage.clear(); vi.unstubAllGlobals() })
+afterEach(() => { localStorage.clear(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 
 describe('working forms exhibition', () => {
   it('connects every form selection to the correct project and description', () => {
@@ -19,6 +22,8 @@ describe('working forms exhibition', () => {
       expect(within(group).getAllByRole('button').filter(button => button.getAttribute('aria-pressed') === 'true')).toHaveLength(1)
       expect(screen.getByRole('link', { name: `Explore ${project}` })).toHaveAttribute('href', target)
       expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
+      expect(screen.getByRole('list', { name: `${project} concept` }).querySelectorAll('li')).toHaveLength(3)
+      expect(document.querySelector('.form-caption p')).toHaveTextContent(project)
     }
   })
 
@@ -81,4 +86,63 @@ describe('working forms exhibition', () => {
     expect(fireEvent.keyDown(input, { key: 'Tab' })).toBe(true)
   })
 
+})
+
+function MotionSwitch() {
+  const { paused, toggle } = useMotion()
+  return <button onClick={toggle}>{paused ? 'Resume scenes' : 'Pause scenes'}</button>
+}
+
+describe('scroll choreography preferences', () => {
+  it('responds to native scroll, restores static art on pause, and cleans up on unmount', () => {
+    let top = 600
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(() => ({
+      x: 0, y: top, top, bottom: top + 300, left: 0, right: 1200, width: 1200, height: 300, toJSON() {},
+    }))
+    const frames = new Map<number, FrameRequestCallback>()
+    let nextFrame = 0
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { frames.set(++nextFrame, callback); return nextFrame })
+    vi.stubGlobal('cancelAnimationFrame', (id: number) => frames.delete(id))
+    const flush = () => act(() => { const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(16)) })
+    const view = render(<MotionProvider><ScrollScenes /><MotionSwitch /><section data-scene="orientation"><p>The content stays readable.</p><MeaningBridge /></section></MotionProvider>)
+    const path = document.querySelector('.meaning-bridge__threads path')!
+    const initial = path.getAttribute('d')
+    top = 100
+    fireEvent.scroll(window); flush()
+    expect(path.getAttribute('d')).not.toBe(initial)
+    expect(screen.getByText('The content stays readable.')).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Pause scenes' }))
+    expect(document.documentElement).not.toHaveAttribute('data-scroll-scenes')
+    const paused = path.getAttribute('d')
+    top = 400
+    fireEvent.scroll(window); flush()
+    expect(path.getAttribute('d')).toBe(paused)
+    fireEvent.click(screen.getByRole('button', { name: 'Resume scenes' }))
+    expect(document.documentElement).toHaveAttribute('data-scroll-scenes', 'on')
+    view.unmount()
+    expect(document.documentElement).not.toHaveAttribute('data-scroll-scenes')
+    expect(frames.size).toBe(0)
+  })
+})
+
+describe('static sculpture selection', () => {
+  it('redraws the geometry immediately when another idea is selected while paused', () => {
+    localStorage.setItem('portfolio-motion', 'paused')
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }))
+    vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ x: 0, y: 0, top: 0, bottom: 400, left: 0, right: 600, width: 600, height: 400, toJSON() {} })
+    let geometry = 0, draws = 0
+    const context = {
+      clearRect() { geometry = 0; draws++ }, setTransform() {}, beginPath() {}, stroke() {},
+      moveTo(x: number, y: number) { geometry += x * .3 + y * .7 },
+      lineTo(x: number, y: number) { geometry += x * .3 + y * .7 },
+    }
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context as unknown as CanvasRenderingContext2D)
+    render(<MotionProvider><WorkingForms /></MotionProvider>)
+    const firstGeometry = geometry, firstDraws = draws
+    fireEvent.click(screen.getByRole('button', { name: '03 Time' }))
+    expect(draws).toBeGreaterThan(firstDraws)
+    expect(geometry).not.toBe(firstGeometry)
+    expect(screen.getByRole('link', { name: 'Explore Clock Museum' })).toBeInTheDocument()
+  })
 })

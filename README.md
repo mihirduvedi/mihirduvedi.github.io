@@ -32,16 +32,19 @@ Vite uses relative asset paths, so the same build works at a user-site root or a
 - `src/Dayglass.tsx` — 24-hour clock state and painted frame sequence
 - `src/styles.css` — original typography and base components
 - `src/exhibition.css` — sculptural index, exhibit framing, and responsive refinements
-- `src/WorkingForms.tsx` — procedural line forms and their project destinations
+- `src/WorkingForms.tsx` — fluid line forms, project explanations, and destinations
+- `src/ScrollScenes.tsx` — event-driven scroll choreography and the woven meaning diagram
+- `src/choreography.css` — numbered chapter entrances, threadwork, and closing signature
 - `src/motion.tsx` — motion preference, OS reduced-motion support, and local persistence
 - `ASSET_PROVENANCE.md` — source and publication notes for local assets
 
 ## Interactive exhibits
 
-- Select a theme in the opening index to change its form and project destination. The geometry is a visual metaphor for each project's idea, not a data visualization of project telemetry.
+- Select a theme in the opening index to change its form and project destination. Traveling waves deform the surface continuously; copper highlights move along the threads. Each caption explains the metaphor and names the associated project. The geometry is a visual metaphor for each project's idea, not a data visualization of project telemetry.
 - Autocomplete draws branches from the actual candidate set. Arrow keys select; Enter accepts; Tab completes an unfinished word. Tab after a completion and Shift+Tab leave the field normally.
 - The hourglass slider previews any minute of the day. **Return to local time** resumes the clock.
 - **Motion off** pauses ambient movement and holds the clock. The preference is stored locally. OS reduced motion starts the page paused, and the canvas stops drawing offscreen or in hidden tabs.
+- Native scrolling reshapes the common-thread diagram, draws project-specific chapter rules, and gently settles exhibit media into place. Text remains visible throughout. Motion off restores the complete static composition; there is no scroll hijacking.
 - The exhibition navigator follows the current project while scrolling. All existing fragment links remain available.
 
 The new renderer uses Canvas 2D and adds no dependencies or external assets.
