@@ -6,6 +6,7 @@ export type AtlasProject = {
   title: string
   theme: string
   href: string
+  companion?: { title: string; href: string }
 }
 
 export const atlasProjects: AtlasProject[] = [
@@ -15,6 +16,7 @@ export const atlasProjects: AtlasProject[] = [
     title: 'Agent Receipt',
     theme: 'Trust',
     href: '#agent-receipt',
+    companion: { title: 'Counterstep', href: '#counterstep' },
   },
   {
     key: 'prediction',
@@ -42,14 +44,14 @@ export const atlasProjects: AtlasProject[] = [
 export const workingQuestions = [
   {
     number: '1',
-    title: 'What makes a log feel like an explanation?',
+    title: 'What would make an activity log actually explain what happened?',
   },
   {
     number: '2',
-    title: 'When should software explain itself without being asked?',
+    title: 'When should an app explain what it’s doing without waiting for someone to ask?',
   },
   {
     number: '3',
-    title: 'What changes when we design the failure first?',
+    title: 'How would I build an app if I started with what could go wrong?',
   },
 ]

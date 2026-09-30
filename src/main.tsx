@@ -4,6 +4,8 @@ import '@fontsource-variable/anybody/wdth.css'
 import '@fontsource-variable/source-sans-3'
 import App from './App'
 import './styles.css'
+import './exhibition.css'
+import './choreography.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

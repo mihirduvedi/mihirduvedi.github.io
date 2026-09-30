@@ -5,11 +5,13 @@ import Dayglass from './Dayglass'
 import { createAutocompleteIndex, getSuggestions } from './autocomplete'
 
 describe('portfolio homepage', () => {
-  it('renders the core narrative and four project exhibits', () => {
+  it('renders the core narrative and five projects', () => {
     render(<App />)
     expect(screen.getByRole('heading', { level: 1, name: /Mihir Duvedi/ })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Skip to main content/ })).toHaveAttribute('href', '#main')
     expect(screen.getByRole('heading', { level: 3, name: 'Agent Receipt' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: 'Counterstep' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Counterstep' })).toHaveAttribute('href', '#counterstep')
     expect(screen.getByRole('heading', { level: 3, name: 'Autocomplete' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 3, name: 'Clock Museum' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 3, name: 'Atrium' })).toBeInTheDocument()
@@ -19,10 +21,10 @@ describe('portfolio homepage', () => {
   it('lets visitors inspect the Agent Receipt states', () => {
     render(<App />)
     const controls = screen.getByRole('group', { name: 'Agent Receipt views' })
-    const gapButton = within(controls).getByRole('button', { name: /Evidence gap/ })
+    const gapButton = within(controls).getByRole('button', { name: /Missing evidence/ })
     fireEvent.click(gapButton)
     expect(gapButton).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByAltText(/evidence-gap view/i)).toBeInTheDocument()
+    expect(screen.getByAltText(/conclusion as uncertain/i)).toBeInTheDocument()
   })
 
   it('only returns candidates that begin with the unfinished prefix', () => {
@@ -44,12 +46,12 @@ describe('portfolio homepage', () => {
     expect(input.getAttribute('value')).toMatch(/^I build systems al[a-z']+ $/i)
 
     fireEvent.change(input, { target: { value: 'quantum zebra' } })
-    expect(screen.getByText(/No corpus word starts with “zebra.”/)).toBeInTheDocument()
+    expect(screen.getByText(/No match for “zebra”/)).toBeInTheDocument()
   })
 
   it('renders one 24-hour sand clock and changes the Atrium view', () => {
     render(<App />)
-    expect(screen.getByRole('figure', { name: /hand-painted 24-hour hourglass/i })).toBeInTheDocument()
+    expect(screen.getByRole('figure', { name: /24-hour hourglass/i })).toBeInTheDocument()
     expect(document.querySelectorAll('.dayglass__vessel')).toHaveLength(2)
     expect(document.querySelector('.dayglass__live-sand')).toBeInTheDocument()
     expect(document.querySelectorAll('.atrium-screen::before')).toHaveLength(0)
@@ -57,7 +59,7 @@ describe('portfolio homepage', () => {
     const progress = screen.getByRole('button', { name: /Progress/ })
     fireEvent.click(progress)
     expect(progress).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByAltText(/Current Atrium Progress screen/i)).toBeInTheDocument()
+    expect(screen.getByAltText(/Atrium’s Progress screen/i)).toBeInTheDocument()
   })
 
   it('maps the full 24-hour day to the clock state', () => {
