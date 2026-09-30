@@ -429,7 +429,7 @@ function About() {
         </div>
         <div className="about-copy">
           <p className="plate-label">Mihir Duvedi</p><h2 id="about-heading">About me</h2>
-          <p className="body-large">I’m a computer science and Spanish student at USC. I make apps and research tools, and I’m interested in how people figure out what those tools are doing. This site is also a place to try out ideas with clocks and animation.</p>
+          <p className="body-large">I’m a computer science and Spanish student at USC. I make apps and research tools, and I’m interested in how people figure out what those tools are doing.</p>
           <div className="about-links"><a className="primary-link primary-link--dark" href={linkedInUrl} target="_blank" rel="noreferrer">LinkedIn <ExternalLink aria-hidden="true" /></a><a className="text-link text-link--dark" href={githubUrl} target="_blank" rel="noreferrer">GitHub <ExternalLink aria-hidden="true" /></a></div>
         </div>
       </div>
